@@ -142,7 +142,6 @@ local function oilcan_trig(timbre_num, velocity)
 	end
 	table.insert(msg,1,1)
 	tab.print(msg)
-	-- engine.trig(table.unpack(msg))
 	osc.send({'localhost',57120}, '/oilcan/trig', msg)
 end
 
@@ -185,6 +184,9 @@ local function add_oilcan_params()
 		end
 		-- params:hide('timbre '..i)
 	end
+
+	-- I think all timbres param groups should be visible when the player is active, that way you can construct a little drumkit on one track.
+
 	-- params:set_action("selected_timbre", function()
 	-- 	local t = params:get("selected_timbre")
 	-- 	for i=1,NUM_TIMBRES do
@@ -195,6 +197,7 @@ local function add_oilcan_params()
 	-- 		end
 	-- 	end
 	-- end)
+	
 end
 
 function add_oilcan_player()
