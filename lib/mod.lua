@@ -132,16 +132,15 @@ param_specs = {
 
 local function oilcan_trig(timbre_num, velocity)
 	timbre_num = timbre_num and timbre_num or params:get('selected_timbre')
-	local msg = {1}
+	local msg = {}
 	for k,v in ipairs(param_specs) do
-		table.insert(msg,params:get(v.id..'_timbre_'..timbre_num))
+		msg[k] = params:get(v.id..'_timbre_'..timbre_num)
 		msg[k] = msg[k] * params:get(v.id..'_mult')
 		if v.id=='gain' then msg[k] = msg[k] * velocity end
-
-		local min = params:lookup_param(v.id..'_timbre_'..timbre_num).min
-		local max = params:lookup_param(v.id..'_timbre_'..timbre_num).max
-		msg[k] = util.clamp(msg[k],min,max)
+		msg[k] = util.clamp(msg[k],v.min,v.max)
+		print(v.id, v.min, v.max, msg[k])
 	end
+	table.insert(msg,1,1)
 	tab.print(msg)
 	-- engine.trig(table.unpack(msg))
 	osc.send({'localhost',57120}, '/oilcan/trig', msg)
@@ -149,7 +148,7 @@ end
 
 local function add_oilcan_params()
 
-	params:add_group('Oilcan',#param_specs+2) -- todo add number here
+	params:add_group('Oilcan',#param_specs+3)
 	params:add_binary('oilcan_trig','trigger')
 	params:set_action('oilcan_trig', function() 
 		oilcan_trig(params:get('selected_timbre'), 1)
@@ -163,9 +162,9 @@ local function add_oilcan_params()
 		,	name = '*'..v.name
 		,	type = 'taper'
 		,	min = 0
-		,	max = 2
+		,	max = 10
 		,	default = 1
-		,	k = 4
+		,	k = 5
 		,	units = 'x'
 		}
 	end
@@ -183,20 +182,19 @@ local function add_oilcan_params()
 			,	k = v.k and v.k or 4
 			,	units = v.units and v.units or ''
 			}
-			--params:hide(v.id..'_timbre_'..i)
 		end
-		params:hide('timbre '..i)
+		-- params:hide('timbre '..i)
 	end
-	params:set_action("selected_timbre", function()
-		local t = params:get("selected_timbre")
-		for i=1,NUM_TIMBRES do
-			if i == t then
-				params:show("timbres "..i)
-			else
-				params:hide("timbres "..i)
-			end
-		end
-	end)
+	-- params:set_action("selected_timbre", function()
+	-- 	local t = params:get("selected_timbre")
+	-- 	for i=1,NUM_TIMBRES do
+	-- 		if i == t then
+	-- 			params:show("timbre "..i)
+	-- 		else
+	-- 			params:hide("timbre "..i)
+	-- 		end
+	-- 	end
+	-- end)
 end
 
 function add_oilcan_player()
