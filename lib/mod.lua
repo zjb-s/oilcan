@@ -108,6 +108,24 @@ param_specs = {
 	}
 }
 
+-- local preset_sounds = {
+-- 	[1] = {
+-- 		freq = 
+-- 	,	sweep_time = 
+-- 	,	sweep_ix = 
+-- 	,	atk = 
+-- 	,	car_rel = 
+-- 	,	mod_rel = 
+-- 	,	mod_ix = 
+-- 	,	mod_ratio = 
+-- 	,	fb = 
+-- 	,	fold = 
+-- 	,	headroom = 
+-- 	,	gain = 
+-- 	,	level =
+-- 	}
+-- }
+
 local function oilcan_trig(timbre_num, velocity)
 	timbre_num = timbre_num and timbre_num or params:get('selected_timbre')
 	local msg = {1}
@@ -115,6 +133,10 @@ local function oilcan_trig(timbre_num, velocity)
 		table.insert(msg,params:get(v.id..'_timbre_'..timbre_num))
 		msg[k] = msg[k] * params:get(v..'_mult')
 		if v=='gain' then msg[k] = msg[k] * velocity end
+
+		local min = params:lookup_param(v.id..'_timbre_'..timbre_num).min
+		local max = params:lookup_param(v.id..'_timbre_'..timbre_num).max
+		msg[k] = util.clamp(msg[k],min,max)
 	end
 	-- engine.trig(table.unpack(msg))
 	osc.send({'localhost',57120}, 'oilcan/trig', msg)
@@ -135,6 +157,7 @@ local function add_oilcan_params()
 		,	type = 'taper'
 		,	min = 0
 		,	max = 2
+		,	default = 1
 		,	k = 4
 		,	units = 'x'
 		}
