@@ -2,6 +2,10 @@ NUM_TIMBRES = 12
 
 local mod = require 'core/mods'
 
+if note_players == nil then
+	note_players = {}
+end
+
 -- todo look into taking over grid temporarily to edit timbres
 
 param_specs = {
@@ -131,22 +135,25 @@ local function oilcan_trig(timbre_num, velocity)
 	local msg = {1}
 	for k,v in ipairs(param_specs) do
 		table.insert(msg,params:get(v.id..'_timbre_'..timbre_num))
-		msg[k] = msg[k] * params:get(v..'_mult')
-		if v=='gain' then msg[k] = msg[k] * velocity end
+		msg[k] = msg[k] * params:get(v.id..'_mult')
+		if v.id=='gain' then msg[k] = msg[k] * velocity end
 
 		local min = params:lookup_param(v.id..'_timbre_'..timbre_num).min
 		local max = params:lookup_param(v.id..'_timbre_'..timbre_num).max
 		msg[k] = util.clamp(msg[k],min,max)
 	end
+	tab.print(msg)
 	-- engine.trig(table.unpack(msg))
-	osc.send({'localhost',57120}, 'oilcan/trig', msg)
+	osc.send({'localhost',57120}, '/oilcan/trig', msg)
 end
 
 local function add_oilcan_params()
 
 	params:add_group('Oilcan',#param_specs+2) -- todo add number here
 	params:add_binary('oilcan_trig','trigger')
-	params:set_action('oilcan_trig',oilcan_trig)
+	params:set_action('oilcan_trig', function() 
+		oilcan_trig(params:get('selected_timbre'), 1)
+	end)
 	params:add_number('selected_timbre','timbre to play',1,NUM_TIMBRES,1)
 
 	params:add_separator('Multipliers')
@@ -164,7 +171,7 @@ local function add_oilcan_params()
 	end
 
 	for i=1,NUM_TIMBRES do
-		params:add_group('timbre '..i,#param_specs)
+		params:add_group('timbre '..i, 'timbre '..i, #param_specs)
 		for _,v in ipairs(param_specs) do
 			params:add{
 				id = v.id..'_timbre_'..i
@@ -176,9 +183,20 @@ local function add_oilcan_params()
 			,	k = v.k and v.k or 4
 			,	units = v.units and v.units or ''
 			}
-			params:hide(v.id..'_timbre_'..i)
+			--params:hide(v.id..'_timbre_'..i)
 		end
+		params:hide('timbre '..i)
 	end
+	params:set_action("selected_timbre", function()
+		local t = params:get("selected_timbre")
+		for i=1,NUM_TIMBRES do
+			if i == t then
+				params:show("timbres "..i)
+			else
+				params:hide("timbres "..i)
+			end
+		end
+	end)
 end
 
 function add_oilcan_player()
@@ -213,13 +231,16 @@ function add_oilcan_player()
 		}
 	end
 
-	function player:play_note(note, vel)
-		oilcan_trig(params:get('selected_timbre'),vel)
+	function player:note_on(note, vel)
+		print("note", note)
+		oilcan_trig(note % 12 + 1,vel)
 	end
 
 	function player:add_params()
         add_oilcan_params(i)
     end
+
+	note_players['oilcan'] = player
 end
 
 mod.hook.register('script_pre_init', 'oilcan pre init', function()

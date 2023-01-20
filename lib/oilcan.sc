@@ -30,9 +30,11 @@ Oilcan {
 				\mod_ix, \mod_ratio, \fb, \fold, \headroom, \gain, \level],
 				msg[2..]].lace;
 				var syn = Synth.new(\Oilcan, args);
+				"perc!!".postln;
+				args.postln;
 			}, "/oilcan/trig");
 
-/*		this.addCommand("trig", "ffffffffffffff", { |msg|
+		/*this.addCommand("trig", "ffffffffffffff", { |msg|
 			var args = [[
 				\freq, \sweep_time, \sweep_ix, \atk, \car_rel, \mod_rel,
 				\mod_ix, \mod_ratio, \fb, \fold, \headroom, \gain, \level],
@@ -40,6 +42,6 @@ Oilcan {
 			var syn = Synth.new(\Oilcan, args);
 		});*/
 
+		};
 	}
-
 }
