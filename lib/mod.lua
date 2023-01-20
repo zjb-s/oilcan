@@ -136,22 +136,30 @@ local function oilcan_trig(timbre_num, velocity)
 	for k,v in ipairs(param_specs) do
 		msg[k] = params:get(v.id..'_timbre_'..timbre_num)
 		msg[k] = msg[k] * params:get(v.id..'_mult')
-		if v.id=='gain' then msg[k] = msg[k] * velocity end
+		if v.id=='gain' then 
+			msg[k] = msg[k] * velocity 
+		-- elseif v.id=='
+		end
 		msg[k] = util.clamp(msg[k],v.min,v.max)
-		print(v.id, v.min, v.max, msg[k])
+		-- print(v.id, v.min, v.max, msg[k])
 	end
 	table.insert(msg,1,1)
-	tab.print(msg)
+	-- tab.print(msg)
 	osc.send({'localhost',57120}, '/oilcan/trig', msg)
 end
 
+oilcan_clipboard = {
+}
+
 local function add_oilcan_params()
 
-	params:add_group('Oilcan',#param_specs+3)
+	params:add_group('Oilcan',#param_specs+5)
 	params:add_binary('oilcan_trig','trigger')
 	params:set_action('oilcan_trig', function() 
 		oilcan_trig(params:get('selected_timbre'), 1)
 	end)
+	params:add_binary('oilcan_save','save multipliers')
+	params:add_binary('oilcan_load','load multipliers')
 	params:add_number('selected_timbre','timbre to play',1,NUM_TIMBRES,1)
 
 	params:add_separator('Multipliers')
@@ -167,6 +175,14 @@ local function add_oilcan_params()
 		,	units = 'x'
 		}
 	end
+
+	params:set_action('oilcan_save',function()
+		for _,v in ipairs(param_specs) do oilcan_clipboard[v.id] = params:get(v.id..'_mult') end
+	end)
+	params:lookup_param('oilcan_save').action()
+	params:set_action('oilcan_load',function()
+		for _,v in ipairs(param_specs) do params:set(v.id..'_mult',oilcan_clipboard[v.id]) end
+	end)
 
 	for i=1,NUM_TIMBRES do
 		params:add_group('timbre '..i, 'timbre '..i, #param_specs)
@@ -197,7 +213,7 @@ local function add_oilcan_params()
 	-- 		end
 	-- 	end
 	-- end)
-	
+	params:bang()
 end
 
 function add_oilcan_player()
