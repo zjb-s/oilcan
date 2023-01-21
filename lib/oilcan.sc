@@ -44,14 +44,24 @@ Oilcan {
 			}).add;
 
 			OSCFunc.new({ |msg, time, addr, recvPort|
+				var syn;
+				var idx = msg[1];
 				var args = [[
 				\freq, \sweep_time, \sweep_ix, \atk, \car_rel, \mod_rel,
 				\mod_ix, \mod_ratio, \fb, \fold, \headroom, \gain, \routing, \level],
 				msg[2..]].lace;
-				voxs[msg[1]].release(1.001);
-				var syn = Synth.new(\Oilcan, args, voxs[msg[1]]);
-				"perc!!".postln;
-				args.postln;
+				if (voxs[idx] != nil) {
+					voxs[idx].release(1.001);
+				};
+				syn = Synth.new(\Oilcan, args);
+				syn.onFree {
+					if (voxs[idx] != nil && voxs[idx] === syn) {
+						voxs.put(idx, nil);
+					};
+				};
+				voxs.put(msg[1], syn);
+				// "perc!!".postln;
+				// args.postln;
 			}, "/oilcan/trig");
 
 		};
