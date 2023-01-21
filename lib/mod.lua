@@ -51,7 +51,7 @@ param_specs = {
 	},
 	{
 		id = 'mod_rel'
-	,	name = 'MOD RELEASE'
+	,	name = 'MODULATOR RELEASE'
 	,	min = 0.1
 	,	max = 200
 	,	default = 100
@@ -59,17 +59,25 @@ param_specs = {
 	},
 	{
 		id = 'mod_ix'
-	,	name = 'MOD INDEX'
+	,	name = 'MODULATOR LEVEL'
 	,	min = 0
 	,	max = 1
 	,	default = 0
 	},
 	{
 		id = 'mod_ratio'
-	,	name = 'OP RATIO'
+	,	name = 'MODULATOR RATIO'
 	,	min = 0.001
 	,	max = 32
 	,	default = 1
+	},
+	{
+		id = 'routing'
+	,	name = 'ROUTING'
+	,	min = 0
+	,	max = 1
+	,	default = 0.1
+	,	k = 0
 	},
 	{
 		id = 'fb'
@@ -111,24 +119,6 @@ param_specs = {
 	,	units = 'x'
 	}
 }
-
--- local preset_sounds = {
--- 	[1] = {
--- 		freq = 
--- 	,	sweep_time = 
--- 	,	sweep_ix = 
--- 	,	atk = 
--- 	,	car_rel = 
--- 	,	mod_rel = 
--- 	,	mod_ix = 
--- 	,	mod_ratio = 
--- 	,	fb = 
--- 	,	fold = 
--- 	,	headroom = 
--- 	,	gain = 
--- 	,	level =
--- 	}
--- }
 
 local function oilcan_trig(timbre_num, velocity)
 	timbre_num = timbre_num and timbre_num or params:get('selected_timbre')
@@ -236,7 +226,7 @@ function add_oilcan_player()
     end
 
 	function player:modulate(v)
-		self.timbre_modulation = v
+		self.timbre_modulation = 'mod_ix'
 	end
 
 	function player:describe()
