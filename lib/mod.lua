@@ -184,19 +184,23 @@ function add_oilcan_player(player_num)
 
 	local function oilcan_load_kit(path)
 		local f = path and path or params:get(n('target_file'))
-		local r = tab.load(f)
-		for i=1,NUM_TIMBRES do
-			-- tab.print(r[i])
-			for k,v in ipairs(param_specs) do
-				-- print('setting',n(v.id..'_'..i),'to',r[i][k])
-				params:set(n(v.id..'_'..i), r[i][k])
+		if util.file_exists(f) then
+			local r = tab.load(f)
+			for i=1,NUM_TIMBRES do
+				-- tab.print(r[i])
+				for k,v in ipairs(param_specs) do
+					-- print('setting',n(v.id..'_'..i),'to',r[i][k])
+					params:set(n(v.id..'_'..i), r[i][k])
+				end
 			end
+			print('loaded kit from '..f)
+		else
+			print('kit file '..f..' does not exist yet')
 		end
-		print('loaded kit from '..f)
 	end
 
 	local function add_oilcan_params()
-		params:add_group(n('oilcan'), 'OILCAN #'..player_num, (NUM_TIMBRES+1)*#param_specs+11) -- keep an eye on this number
+		params:add_group(n('oilcan'), 'OILCAN #'..player_num, (NUM_TIMBRES+1)*#param_specs+12) -- keep an eye on this number
 		params:add_number(n('selected_timbre'),'SELECTED TIMBRE',1,NUM_TIMBRES,1)
 	
 		for j=1,NUM_TIMBRES do
@@ -216,7 +220,7 @@ function add_oilcan_player(player_num)
 			-- params:hide('timbre '..i)
 		end
 	
-		params:add_separator(n('MACROS'))
+		params:add_separator(n('MACROS'), 'MACROS')
 		for _,v in ipairs(param_specs) do
 			params:add{
 				id = n(v.id..'_mult')
@@ -230,21 +234,22 @@ function add_oilcan_player(player_num)
 			}
 		end
 
-		params:add_separator(n('OPTIONS'))
+		params:add_separator(n('OPTIONS'), 'OPTIONS')
 		params:add_binary(n('trig'),'TRIG')
 		params:set_action(n('trig'), function() 
 			oilcan_trig(params:get(n('selected_timbre')), 1)
 		end)
-		params:add_binary(n('copy_multipliers'),'TEMP SAVE MACROS')
-		params:add_binary(n('paste_multipliers'),'TEMP LOAD MACROS')
-		params:add_binary(n('copy_timbre'),'TEMP SAVE TIMBRE')
-		params:add_binary(n('paste_timbre'),'TEMP LOAD TIMBRE')
-		params:add_file(n('target_file'),'TARGET FILE')
-		params:add_binary(n('save_kit'),'SAVE KIT TO FILE')
+		params:add_binary(n('copy_multipliers'),'COPY MACROS')
+		params:add_binary(n('paste_multipliers'),'PASTE MACROS')
+		params:add_binary(n('copy_timbre'),'COPY TIMBRE')
+		params:add_binary(n('paste_timbre'),'PASTE TIMBRE')
+		params:add_file(n('target_file'),'OPEN', _path.data .. 'oilcan/default-1.oilkit')
+		params:set_action(n('target_file'), oilcan_load_kit)
+		params:add_binary(n('save_kit'),'SAVE')
 		params:set_action(n('save_kit'), function() oilcan_save_kit() end)
-		params:add_binary(n('load_kit'),'LOAD KIT FROM FILE')
+		params:add_binary(n('load_kit'),'REVERT')
 		params:set_action(n('load_kit'), function() oilcan_load_kit() end)
-		params:add_binary(n('save_new'),'NEW TARGET FILE')
+		params:add_binary(n('save_new'),'NEW')
 		params:set_action(n('save_new'), function() oilcan_new_kit_file() end)
 	
 		params:set_action(n('copy_multipliers'),function()
@@ -282,7 +287,8 @@ function add_oilcan_player(player_num)
 			_menu.rebuild_params()
 		end)
 		params:hide(n('oilcan'))
-		params:bang()
+		params:lookup_param(n('load_kit')):bang()
+		params:lookup_param(n('selected_timbre')):bang()
 	end
 
 	local player = {timbre_modulation = 0}
@@ -328,6 +334,14 @@ function add_oilcan_player(player_num)
 
 	note_players['Oilcan '..player_num] = player
 end
+
+mod.hook.register('system_post_startup', 'oilcan setup', function()
+	util.make_dir(_path.data .. 'oilcan')
+	if not util.file_exists(_path.data .. 'oilcan/default-1.oilkit') then
+		print("copying oilcan presets")
+		os.execute('cp '.. _path.code .. 'oilcan/lib/*.oilkit '.. _path.data .. 'oilcan/')
+	end
+end)
 
 mod.hook.register('script_pre_init', 'oilcan pre init', function()
 	for i=1,4 do add_oilcan_player(i) end
