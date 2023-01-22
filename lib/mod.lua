@@ -337,10 +337,8 @@ end
 
 mod.hook.register('system_post_startup', 'oilcan setup', function()
 	util.make_dir(_path.data .. 'oilcan')
-	if not util.file_exists(_path.data .. 'oilcan/default-1.oilkit') then
-		print("copying oilcan presets")
-		os.execute('cp '.. _path.code .. 'oilcan/lib/*.oilkit '.. _path.data .. 'oilcan/')
-	end
+	print("copying oilcan presets")
+	os.execute('cp '.. _path.code .. 'oilcan/lib/*.oilkit '.. _path.data .. 'oilcan/')
 end)
 
 mod.hook.register('script_pre_init', 'oilcan pre init', function()
