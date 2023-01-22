@@ -317,9 +317,9 @@ function add_oilcan_player(player_num)
 
 	function player:note_on(note, vel)
 		-- print("note", note)
-		local n = note > 7 and note - 7 or note
+		local n = (note - 1) % 7 + 1
 		local mod = self.timbre_modulation
-		oilcan_trig(note,vel,mod)
+		oilcan_trig(n,vel,mod)
 	end
 
 	function player:add_params()
