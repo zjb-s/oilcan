@@ -28,15 +28,11 @@ Oilcan {
 
 				var pitch = Clip.ar(freq + (sweep_env*5000),0,10000);
 
-				// var mod = Fold.ar(SinOscFB.ar(pitch * mod_ratio, fb) * mod_env * mod_ix * (fold+1), -1, 1);
-				// var car = Fold.ar(SinOsc.ar(pitch + (mod*10000)) * (fold+1), -1, 1);
-
-				var mod = SinOscFB.ar(pitch * mod_ratio, fb) * mod_env * mod_ix;
-				var car = SinOsc.ar(pitch + (mod*10000*(1-routing))) * car_env;
+				var mod = Fold.ar(SinOscFB.ar(pitch * mod_ratio, fb) * (fold+1), -1, 1) * mod_env * mod_ix;
+				var car = Fold.ar(SinOsc.ar(pitch + (mod*10000*(1-routing))) * (fold+1), -1, 1) * car_env;
 
 				var sig = car + (mod*routing);
 
-				sig = Fold.ar(sig*(fold+1),-1,1);
 				sig = Clip.ar(sig, 0-headroom,headroom);
 				sig = (sig * gain).tanh;
 
@@ -51,7 +47,7 @@ Oilcan {
 				\mod_ix, \mod_ratio, \fb, \fold, \headroom, \gain, \routing, \level],
 				msg[2..]].lace;
 				if (voxs[idx] != nil) {
-					voxs[idx].release(1.001);
+					voxs[idx].free;
 				};
 				syn = Synth.new(\Oilcan, args);
 				syn.onFree {

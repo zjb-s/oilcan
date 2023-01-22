@@ -1,4 +1,4 @@
-NUM_TIMBRES = 12
+NUM_TIMBRES = 7
 
 local mod = require 'core/mods'
 
@@ -7,6 +7,7 @@ if note_players == nil then
 end
 
 -- todo look into taking over grid temporarily to edit timbres
+-- 
 
 param_specs = {
 	{
@@ -121,22 +122,26 @@ param_specs = {
 }
 
 oilcan_clipboard = {
+	multipliers = {}
+,	timbre = {}
 }
 
-function add_oilcan_player(i)
+function add_oilcan_player(player_num)
 	local function n(s)
-		return 'oilcan_'..s..'_'..i
+		return 'oilcan_'..s..'_'..player_num
 	end
 
-	local function oilcan_trig(timbre_num, velocity)
-		timbre_num = timbre_num and timbre_num or params:get('selected_timbre')
+	local function oilcan_trig(timbre_num, velocity, mod)
+		timbre_num = timbre_num and timbre_num or params:get(n('selected_timbre'))
 		local msg = {}
 		for k,v in ipairs(param_specs) do
 			msg[k] = params:get(n(v.id..'_'..timbre_num))
 			msg[k] = msg[k] * params:get(n(v.id..'_mult'))
 			if v.id=='gain' then 
 				msg[k] = msg[k] * velocity 
-			-- elseif v.id=='
+			elseif v.id=='mod_ix' and mod then
+				-- print('mod is',mod)
+				msg[k] = msg[k] + mod
 			end
 			msg[k] = util.clamp(msg[k],v.min,v.max)
 			-- print(v.id, v.min, v.max, msg[k])
@@ -146,21 +151,59 @@ function add_oilcan_player(i)
 		osc.send({'localhost',57120}, '/oilcan/trig', msg)
 	end
 
+	
+	local function oilcan_save_kit(path)
+		local r = {}
+		local f = path and path or params:get(n('target_file'))
+		if type(f) ~= 'string' then 
+			print('oilcan: no file target selected!')
+			return
+		end
+		for i=1,NUM_TIMBRES do
+			table.insert(r,{})
+			for _,v in ipairs(param_specs) do
+				table.insert(r[i],params:get(n(v.id..'_'..i)))
+			end
+		end
+		tab.save(r,f)
+		print('saved kit to '..f)
+	end
+
+	local function oilcan_new_kit_file()
+		local f
+		for i=1,999 do
+			f = '/home/we/dust/data/oilcan/oilkits/oilkit-'..i
+			if not util.file_exists(f) then
+				os.execute('touch '..f)
+				params:set(n('target_file'), f)
+				print('created '..f)
+				break
+			end
+		end
+	end
+
+	local function oilcan_load_kit(path)
+		local f = path and path or params:get(n('target_file'))
+		local r = tab.load(f)
+		for i=1,NUM_TIMBRES do
+			-- tab.print(r[i])
+			for k,v in ipairs(param_specs) do
+				-- print('setting',n(v.id..'_'..i),'to',r[i][k])
+				params:set(n(v.id..'_'..i), r[i][k])
+			end
+		end
+		print('loaded kit from '..f)
+	end
+
 	local function add_oilcan_params()
-		params:add_group(n('oilcan'), 'Oilcan '..i, (NUM_TIMBRES+1)*#param_specs+5)
-		params:add_binary(n('oilcan_trig'),'trigger')
-		params:set_action(n('oilcan_trig'), function() 
-			oilcan_trig(params:get(n('selected_timbre')), 1)
-		end)
-		params:add_binary(n('oilcan_save'),'save multipliers')
-		params:add_binary(n('oilcan_load'),'load multipliers')
-		params:add_number(n('selected_timbre'),'timbre to play',1,NUM_TIMBRES,1)
+		params:add_group(n('oilcan'), 'OILCAN #'..player_num, (NUM_TIMBRES+1)*#param_specs+11) -- keep an eye on this number
+		params:add_number(n('selected_timbre'),'SELECTED TIMBRE',1,NUM_TIMBRES,1)
 	
 		for j=1,NUM_TIMBRES do
 			for _,v in ipairs(param_specs) do
 				params:add{
 					id = n(v.id..'_'..j)
-				,	name = v.name
+				,	name = string.upper(v.name)
 				,	type = 'taper'
 				,	min = v.min
 				,	max = v.max
@@ -173,11 +216,11 @@ function add_oilcan_player(i)
 			-- params:hide('timbre '..i)
 		end
 	
-		params:add_separator('Multipliers')
+		params:add_separator(n('MACROS'))
 		for _,v in ipairs(param_specs) do
 			params:add{
 				id = n(v.id..'_mult')
-			,	name = '*'..v.name
+			,	name = string.upper('*'..v.name)
 			,	type = 'taper'
 			,	min = 0
 			,	max = 10
@@ -186,17 +229,45 @@ function add_oilcan_player(i)
 			,	units = 'x'
 			}
 		end
-	
-		params:set_action(n('oilcan_save'),function()
-			for _,v in ipairs(param_specs) do oilcan_clipboard[v.id] = params:get(n(v.id..'_mult')) end
+
+		params:add_separator(n('OPTIONS'))
+		params:add_binary(n('trig'),'TRIG')
+		params:set_action(n('trig'), function() 
+			oilcan_trig(params:get(n('selected_timbre')), 1)
 		end)
-		params:lookup_param(n('oilcan_save')).action()
-		params:set_action(n('oilcan_load'),function()
-			for _,v in ipairs(param_specs) do params:set(n(v.id..'_mult'),oilcan_clipboard[v.id]) end
+		params:add_binary(n('copy_multipliers'),'TEMP SAVE MACROS')
+		params:add_binary(n('paste_multipliers'),'TEMP LOAD MACROS')
+		params:add_binary(n('copy_timbre'),'TEMP SAVE TIMBRE')
+		params:add_binary(n('paste_timbre'),'TEMP LOAD TIMBRE')
+		params:add_file(n('target_file'),'TARGET FILE')
+		params:add_binary(n('save_kit'),'SAVE KIT TO FILE')
+		params:set_action(n('save_kit'), function() oilcan_save_kit() end)
+		params:add_binary(n('load_kit'),'LOAD KIT FROM FILE')
+		params:set_action(n('load_kit'), function() oilcan_load_kit() end)
+		params:add_binary(n('save_new'),'NEW TARGET FILE')
+		params:set_action(n('save_new'), function() oilcan_new_kit_file() end)
+	
+		params:set_action(n('copy_multipliers'),function()
+			for _,v in ipairs(param_specs) do 
+				oilcan_clipboard.multipliers[v.id] = params:get(n(v.id..'_mult')) 
+			end
 		end)
-	
-		-- I think all timbres param groups should be visible when the player is active, that way you can construct a little drumkit on one track.
-	
+		params:set_action(n('paste_multipliers'),function()
+			for _,v in ipairs(param_specs) do 
+				params:set(n(v.id..'_mult'),oilcan_clipboard.multipliers[v.id]) 
+			end
+		end)
+		params:set_action(n('copy_timbre'),function()
+			for _,v in ipairs(param_specs) do 
+				oilcan_clipboard.timbre[v.id] = params:get(n(v.id..'_'..params:get(n('selected_timbre'))))
+			end
+		end)
+		params:set_action(n('paste_timbre'),function()
+			for _,v in ipairs(param_specs) do 
+				params:set(n(v.id..'_'..params:get(n('selected_timbre'))),oilcan_clipboard.timbre[v.id]) 
+			end
+		end)
+		
 		params:set_action(n("selected_timbre"), function()
 			local t = params:get(n("selected_timbre"))
 			for j=1,NUM_TIMBRES do
@@ -231,7 +302,7 @@ function add_oilcan_player(i)
     end
 
 	function player:modulate(v)
-		self.timbre_modulation = 'mod_ix'
+		self.timbre_modulation = v
 	end
 
 	function player:describe()
@@ -239,23 +310,25 @@ function add_oilcan_player(i)
 			name = 'Oilcan',
 			supports_bend = false,
 			supports_slew = false,
-			modulate_description = 'fm index',
+			modulate_description = 'modulator level',
+			style = 'kit',
 		}
 	end
 
 	function player:note_on(note, vel)
 		-- print("note", note)
-		oilcan_trig(note % 12 + 1,vel)
+		local n = note > 7 and note - 7 or note
+		local mod = self.timbre_modulation
+		oilcan_trig(note,vel,mod)
 	end
 
 	function player:add_params()
         add_oilcan_params()
     end
 
-	note_players['Oilcan '..i] = player
+	note_players['Oilcan '..player_num] = player
 end
 
 mod.hook.register('script_pre_init', 'oilcan pre init', function()
-	add_oilcan_player(1)
-	add_oilcan_player(2)
+	for i=1,4 do add_oilcan_player(i) end
 end)
