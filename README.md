@@ -15,6 +15,16 @@ greasy percussion mod for norns
 ## params
 | param name | description |
 |-|-|
-| `FREQ` | Base frequency. 
-| `SWEEP TIME` | Percentage of release time spent sweeping towards base frequency.
-| `SWEEP INDEX` | Depth of pitch sweep. 
+| `FREQ` | Base frequency
+| `SWEEP TIME` | Percentage of release time spent sweeping towards base frequency
+| `SWEEP INDEX` | Depth of pitch sweep
+| `ATTACK` | Timbre rise time. Affects all envelopes.
+| `RELEASE` | Fall time to silence. All other envelopes use this time as a reference, so changing this param changes all envelopes.
+| `MODULATOR RELEASE` | Percentage of release time spent releasing the modulation operator.
+| `MODULATOR LEVEL` | Multiplier for the modulator envelope.
+| `MODULATOR RATIO` | Multiplier for the modulator's frequency relative to base frequency.
+| `FEEDBACK` | Mod operator FM feedback. 0 is a sine wave, 10 is tuned noise.
+| `FOLD` | Amount of wavefolding applied to operators at start of signal chain
+| `HEADROOM` | Amount of headroom before the signal hard-clips. Lowering `HEADROOM` applies a filthy compression effect.
+| `GAIN` | Signal multiplier into a soft-clipping waveshaper.
+| `LEVEL` | Clean level control.
