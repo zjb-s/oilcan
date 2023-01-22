@@ -15,4 +15,6 @@ greasy percussion mod for norns
 ## params
 | param name | description |
 |-|-|
-| test | test |
+| `FREQ` | Base frequency. 
+| `SWEEP TIME` | Percentage of release time spent sweeping towards base frequency.
+| `SWEEP INDEX` | Depth of pitch sweep. 
