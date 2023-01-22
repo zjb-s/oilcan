@@ -1,5 +1,8 @@
 # oilcan
-greasy percussion mod for norns
+greasy percussion engine
+![Untitled_Artwork 17](https://user-images.githubusercontent.com/86270534/213924876-23b20e74-ae0d-41d5-b84b-3062ad64f710.png)
+
+
 ## what?
 * Oilcan is a monophonic digital-style percussion voice. At its core, Oilcan is two sine waves capable of basic FM synthesis. These operators are wavefolded, then mixed into two stages of clipping.
 * Oilcan is arranged in *timbres.* You can think of each timbre as its own drum. Each time Oilcan triggers, it picks a timbre based on the note you're sending.
