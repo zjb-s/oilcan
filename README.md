@@ -1,5 +1,3 @@
-# oilcan
-greasy percussion engine
 ![Untitled_Artwork 17](https://user-images.githubusercontent.com/86270534/213924876-23b20e74-ae0d-41d5-b84b-3062ad64f710.png)
 
 
