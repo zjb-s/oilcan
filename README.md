@@ -15,7 +15,7 @@ greasy percussion engine
 
 ## signal flow
 ![Untitled_Artwork 16](https://user-images.githubusercontent.com/86270534/213921482-eb357414-9e54-44e7-be2f-e7e3c8bfe434.png)
-## params
+## params overview
 | param name | description |
 |-|-|
 | `FREQ` | Base frequency
