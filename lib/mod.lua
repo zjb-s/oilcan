@@ -207,7 +207,7 @@ function add_oilcan_player(player_num)
 			for _,v in ipairs(param_specs) do
 				params:add{
 					id = n(v.id..'_'..j)
-				,	name = string.upper(v.name)
+				,	name = "T"..j.." "..string.upper(v.name)
 				,	type = 'taper'
 				,	min = v.min
 				,	max = v.max
@@ -312,12 +312,32 @@ function add_oilcan_player(player_num)
 	end
 
 	function player:describe()
+
+		local d_params = {}
+		for i=1,NUM_TIMBRES do
+			table.insert(d_params, n("freq_"..i))
+			table.insert(d_params, n("sweep_time_"..i))
+			table.insert(d_params, n("sweep_ix_"..i))
+			table.insert(d_params, n("atk_"..i))
+			table.insert(d_params, n("car_rel_"..i))
+			table.insert(d_params, n("mod_rel_"..i))
+			table.insert(d_params, n("mod_ix_"..i))
+			table.insert(d_params, n("mod_ratio_"..i))
+			table.insert(d_params, n("fb_"..i))
+			table.insert(d_params, n("fold_"..i))
+			table.insert(d_params, n("headroom_"..i))
+			table.insert(d_params, n("gain_"..i))
+			table.insert(d_params, n("routing_"..i))
+			table.insert(d_params, n("level_"..i))
+		end
+
 		return {
 			name = 'Oilcan',
 			supports_bend = false,
 			supports_slew = false,
 			modulate_description = 'modulator level',
 			style = 'kit',
+			params = d_params
 		}
 	end
 
